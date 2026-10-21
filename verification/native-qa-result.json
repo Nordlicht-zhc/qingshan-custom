@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "checks": [
+    "minus minimizes normally",
+    "close hides window without destroying it",
+    "real Windows tray icon created",
+    "tray click restores native window",
+    "restored window is not minimized",
+    "tray toggle keeps window alive",
+    "floating window opens and stays on top",
+    "opening twice reuses window",
+    "floating window closes and can reopen"
+  ],
+  "limitation": "Floating-window content uses a local fixture; actual network-speed rendering is not tested."
+}

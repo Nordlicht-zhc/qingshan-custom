@@ -1,0 +1,17 @@
+QingShan/
+backups/
+inspection/
+release-assets/
+*.zip
+*.asar
+*.log
+*.db
+*.sqlite*
+.env*
+__pycache__/
+user.yaml
+subscribe.yaml
+profile.yaml
+config.yaml
+nodes.json
+node-*.png

@@ -1,0 +1,143 @@
+--- a/out/main/index.js
++++ b/out/main/index.js
+@@ -672,6 +672,8 @@
+   return appConfig;
+ }
+ async function patchAppConfig(patch) {
++  if (patch.minimizeToTray === true) patch.disableTray = false;
++  else if (patch.disableTray === true) patch.minimizeToTray = false;
+   if (patch.nameserverPolicy) {
+     appConfig.nameserverPolicy = patch.nameserverPolicy;
+   }
+@@ -6767,7 +6769,7 @@
+   if (floatingWindow) {
+     floatingWindow.show();
+   } else {
+-    createFloatingWindow();
++    await createFloatingWindow();
+   }
+ }
+ async function triggerFloatingWindow() {
+@@ -8961,7 +8963,7 @@
+   if (showFloating) {
+     showFloatingWindow();
+   }
+-  if (!disableTray) {
++  if (!disableTray || (await getAppConfig()).minimizeToTray === true) {
+     await createTray();
+   }
+   await initShortcut();
+@@ -9063,6 +9065,19 @@
+   });
+   exports.mainWindow.on("close", async (event) => {
+     event.preventDefault();
++    const window = exports.mainWindow;
++    try {
++      // Retain the previous config key to preserve the saved switch value.
++      if ((await getAppConfig()).minimizeToTray === true) {
++        await showTrayIcon();
++        if (!tray || tray.isDestroyed()) throw new Error("Tray icon unavailable");
++        if (window && !window.isDestroyed()) window.hide();
++        return;
++      }
++    } catch (error) {
++      console.error("[Tray] Failed to close to tray:", error);
++      return;
++    }
+     triggerSysProxy(false);
+     await stopCore();
+     await patchControledMihomoConfig({ tun: { enable: false } });
+@@ -9092,8 +9107,8 @@
+   }
+ }
+ function triggerMainWindow() {
+-  if (exports.mainWindow?.isVisible()) {
+-    closeMainWindow();
++  if (exports.mainWindow?.isVisible() && !exports.mainWindow.isMinimized()) {
++    exports.mainWindow.hide();
+   } else {
+     showMainWindow();
+   }
+@@ -9103,7 +9118,9 @@
+     if (quitTimeout) {
+       clearTimeout(quitTimeout);
+     }
++    if (exports.mainWindow.isMinimized()) exports.mainWindow.restore();
+     exports.mainWindow.show();
++    exports.mainWindow.focus();
+     exports.mainWindow.focusOnWebView();
+   }
+ }
+--- a/out/renderer/assets/index-B3u5x8yF.js
++++ b/out/renderer/assets/index-B3u5x8yF.js
+@@ -260756,6 +260756,54 @@
+ }
+ let navigate;
+ const SIDER_ORDER = ["sysproxy", "tun", "profile", "connection", "contact", "buy", "logout"];
++const TrayMinimizeOption = () => {
++  const { appConfig, patchAppConfig } = useAppConfig();
++  const [busy, setBusy] = reactExports.useState(false);
++  return jsxRuntimeExports.jsx(switch_default, {
++    size: "sm",
++    isSelected: appConfig?.minimizeToTray === true,
++    isDisabled: busy || !appConfig,
++    "aria-label": "关闭到托盘",
++    onValueChange: async (enabled) => {
++      setBusy(true);
++      try {
++        if (enabled) await showTrayIcon();
++        await patchAppConfig(enabled ? { minimizeToTray: true, disableTray: false } : { minimizeToTray: false });
++      } catch (error) {
++        window.alert("托盘设置保存失败，请重试。" + String(error));
++      } finally { setBusy(false); }
++    },
++    children: "关闭到托盘"
++  });
++};
++const FloatingWindowOption = () => {
++  const { appConfig, patchAppConfig } = useAppConfig();
++  const [busy, setBusy] = reactExports.useState(false);
++  return jsxRuntimeExports.jsx(switch_default, {
++    size: "sm",
++    isSelected: appConfig?.showFloatingWindow === true,
++    isDisabled: busy || !appConfig,
++    "aria-label": "显示悬浮窗",
++    onValueChange: async (enabled) => {
++      setBusy(true);
++      try {
++        if (enabled) await showFloatingWindow();
++        else await closeFloatingWindow();
++        await patchAppConfig({ showFloatingWindow: enabled });
++      } catch (error) {
++        window.alert("悬浮窗设置保存失败，请重试。" + String(error));
++      } finally { setBusy(false); }
++    },
++    children: "显示悬浮窗"
++  });
++};
++const LocalWindowOptions = () => jsxRuntimeExports.jsxs("div", {
++  style: { display: "flex", flexDirection: "column", gap: "10px" },
++  children: [
++    jsxRuntimeExports.jsx("div", { title: "开启后，点击关闭按钮会隐藏到托盘；最小化按钮仍然正常最小化。退出程序请使用托盘菜单。", children: jsxRuntimeExports.jsx(TrayMinimizeOption, {}) }),
++    jsxRuntimeExports.jsx("div", { title: "显示或关闭程序自带的置顶悬浮窗，下次启动继续生效。", children: jsxRuntimeExports.jsx(FloatingWindowOption, {}) })
++  ]
++});
+ const App = () => {
+   const { appConfig, patchAppConfig } = useAppConfig();
+   const {
+@@ -260982,6 +261030,7 @@
+     logout: LogoutCard
+   };
+   return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
++    userInfo?.token === undefined && jsxRuntimeExports.jsx("div", { style: { position: "fixed", left: "16px", bottom: "16px", zIndex: 101, padding: "8px 12px", borderRadius: "8px", background: "white", color: "#222", fontSize: "13px" }, title: "开启后，点击关闭按钮会隐藏到托盘；最小化按钮仍然正常最小化。退出程序请使用托盘菜单。", children: jsxRuntimeExports.jsx(LocalWindowOptions, {}) }),
+     openUpdate && /* @__PURE__ */ jsxRuntimeExports.jsx(
+       UpdaterModal,
+       {
+@@ -261022,6 +261071,7 @@
+                 key
+               );
+             }) }) }) }),
++            jsxRuntimeExports.jsx("div", { style: { padding: "12px 16px", fontSize: "13px" }, title: "开启后，点击关闭按钮会隐藏到托盘；最小化按钮仍然正常最小化。退出程序请使用托盘菜单。", children: jsxRuntimeExports.jsx(LocalWindowOptions, {}) }),
+             /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-4" }),
+             /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-[12px] text-gray-400 text-center", children: [
+               "联系邮箱：",

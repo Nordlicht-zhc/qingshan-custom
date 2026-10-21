@@ -1,0 +1,17 @@
+{
+  "baseVersion": "4.10.2",
+  "originalAsarSha256": "8e2f3afdfdae5738f32465536f2d89323bdef4d11114f6aba71aa2f01095b8d0",
+  "modifiedAsarSha256": "ed2a77b71ffdc8df641b22b5ef74cce4315da07c083ec4ab9eb0cc18315c8c68",
+  "changedEntries": [
+    {
+      "path": "out/main/index.js",
+      "originalSha256": "c4bd0a2f4f5bd87124fde534af58f01c10047143a24704c230ea643d81c79732",
+      "modifiedSha256": "da9cbfc6ad9eea7f2b7ac49a2cd2cd27dd96dc47c3641b898947be68b6953f16"
+    },
+    {
+      "path": "out/renderer/assets/index-B3u5x8yF.js",
+      "originalSha256": "93cd7552124bdd3fe00a80fed22b0727825440512d6b450d3015044567711b78",
+      "modifiedSha256": "b8cafdcc3dd59c86dfe5493eec076c8c5b709b4f53f38ae8913c05b32e58d9d2"
+    }
+  ]
+}
